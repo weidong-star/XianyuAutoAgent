@@ -1,22 +1,16 @@
-#!/bin/bash
-# Railway ????
-# ???????? HTTP ? XianyuAutoAgent ???
+#!/bin/sh
+# Railway ???? ? ???? + ???
 
-# ???? HTTP ?????Railway ???????
 python3 -c "
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import os, threading
-
 class H(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200); self.end_headers(); self.wfile.write(b'OK')
-    def log_message(self, *a): pass
-
-port = int(os.environ.get('PORT', 8080))
-s = HTTPServer(('0.0.0.0', port), H)
-print(f'[Railway] Health server on :{port}')
-s.serve_forever()
+        self.send_response(200);self.end_headers();self.wfile.write(b'OK')
+    def log_message(self,*a):pass
+p=int(os.environ.get('PORT',8080))
+threading.Thread(target=lambda:HTTPServer(('0.0.0.0',p),H).serve_forever(),daemon=True).start()
+print(f'[Railway] Health on :{p}')
 " &
 
-# ?????
-exec python main.py
+exec python3 main.py
