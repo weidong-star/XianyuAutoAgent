@@ -1,7 +1,5 @@
 [build]
-# ?? Nixpacks ?? Python ??
 providers = ["python"]
 
 [start]
-# ????
-cmd = "bash start.sh"
+cmd = "sh start.sh"
