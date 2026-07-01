@@ -1,4 +1,4 @@
-﻿"""Railway 入口 — 健康检查 HTTP + XianyuAutoAgent（纯 Python，零 shell 依赖）"""
+"""Railway 入口 — 健康检查 HTTP + XianyuAutoAgent（纯 Python，零 shell 依赖）"""
 import os, sys, asyncio, threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
