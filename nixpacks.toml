@@ -1,5 +1,0 @@
-[build]
-providers = ["python"]
-
-[start]
-cmd = "sh start.sh"
