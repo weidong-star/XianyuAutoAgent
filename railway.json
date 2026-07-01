@@ -1,0 +1,13 @@
+﻿{
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksConfig": {
+      "providers": ["python"]
+    }
+  },
+  "deploy": {
+    "startCommand": "python railway_entry.py",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 300
+  }
+}
