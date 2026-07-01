@@ -1,4 +1,4 @@
-"""Railway 入口 — 健康检查 HTTP + XianyuAutoAgent（纯 Python，零 shell 依赖）"""
+"""Railway 入口 - 诊断版（查看实际环境变量）"""
 import os, sys, asyncio, threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -23,10 +23,24 @@ def start_health_server():
 
 
 if __name__ == "__main__":
-    # 1. 启动健康检查 HTTP（Railway 需要端口监听）
     threading.Thread(target=start_health_server, daemon=True).start()
 
-    # 2. 加载配置（跳过交互式输入 — 所有变量通过 Railway Variables 提供）
+    # DIAGNOSTIC: 打印所有包含 cookie/key 的环境变量
+    print("[DIAG] Checking environment variables...")
+    for k, v in sorted(os.environ.items()):
+        low = k.lower()
+        if any(w in low for w in ["cookie", "api", "model", "key"]):
+            masked = v[:10] + "..." if len(v) > 10 else v
+            print(f"  ENV: {k} = {masked}")
+
+    cookies_str = os.environ.get("COOKIES_STR") or os.getenv("COOKIES_STR")
+    if not cookies_str:
+        print("[DIAG] COOKIES_STR not found!")
+        print("[DIAG] First 30 env keys:", list(os.environ.keys())[:30])
+        sys.exit(1)
+
+    print(f"[DIAG] COOKIES_STR found, length={len(cookies_str)}")
+
     from dotenv import load_dotenv
     from loguru import logger
 
@@ -38,32 +52,14 @@ if __name__ == "__main__":
     logger.remove()
     logger.add(
         sys.stderr,
-        level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        level="INFO",
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>"
     )
-
-    # 3. 校验必要配置
-    cookies_str = os.getenv("COOKIES_STR")
-    if not cookies_str or cookies_str == "your_cookies_here":
-        logger.error("COOKIES_STR 未设置！请在 Railway Variables 中添加。")
-        sys.exit(1)
 
     api_key = os.getenv("API_KEY")
     if not api_key:
         logger.warning("API_KEY 未设置，AI 回复将不可用")
 
-    # 4. 启动 XianyuLive（复制 main.py 的启动逻辑，但跳过交互式 check）
-    from XianyuApis import XianyuApis
-    from XianyuAgent import XianyuReplyBot
-    from context_manager import ChatContextManager
-    from utils.xianyu_utils import generate_device_id, trans_cookies
-
-    # 预热 ReplyBot（加载 prompt 模板等）
-    XianyuReplyBot()
-
-    # 导入并实例化 XianyuLive
-    # 由于 main.py 中的 XianyuLive 类定义在 __main__ 块之前，
-    # 我们用 importlib 加载而不触发 main 的 if __name__ == "__main__"
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "main_mod", os.path.join(os.path.dirname(__file__), "main.py")
@@ -71,7 +67,6 @@ if __name__ == "__main__":
     main_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(main_mod)
 
-    # 直接调用 main_mod 中的 XianyuLive
     xianyu_live = main_mod.XianyuLive(cookies_str)
     logger.info("XianyuAutoAgent 启动中...")
     asyncio.run(xianyu_live.main())
